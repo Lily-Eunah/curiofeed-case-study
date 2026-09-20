@@ -10,15 +10,15 @@
 <link rel="canonical" href="https://lily-eunah.github.io/curiofeed-case-study/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="CurioFeed — Production LLM Pipeline Case Study">
-<meta property="og:description" content="46.7% → 95% generation success with validation, targeted retries, and ~40% lower token use.">
-<meta property="og:image" content="https://lily-eunah.github.io/curiofeed-case-study/assets/curiofeed-case-study-og.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+<meta property="og:description" content="46.7% → 93% generation success on 30 held-out cases; 39.9% fewer tokens per completed lesson, including retries.">
+<meta property="og:image" content="https://lily-eunah.github.io/curiofeed-case-study/assets/curiofeed-case-study-og-20260921.png">
+<meta property="og:image:width" content="1731">
+<meta property="og:image:height" content="909">
 <meta property="og:image:alt" content="CurioFeed production LLM pipeline case study by Eunah (Lily) Yang">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="CurioFeed — Production LLM Pipeline Case Study">
-<meta name="twitter:description" content="46.7% → 95% generation success with validation, targeted retries, and ~40% lower token use.">
-<meta name="twitter:image" content="https://lily-eunah.github.io/curiofeed-case-study/assets/curiofeed-case-study-og.png">
+<meta name="twitter:description" content="46.7% → 93% generation success on 30 held-out cases; 39.9% fewer tokens per completed lesson, including retries.">
+<meta name="twitter:image" content="https://lily-eunah.github.io/curiofeed-case-study/assets/curiofeed-case-study-og-20260921.png">
 </head>
 <body>
 <style>
@@ -280,12 +280,12 @@
       </div>
 
       <div class="stats">
-        <div class="stat"><div class="n">95%<span class="from"> ← 46.7%</span></div>
-          <div class="l lang-en">Generation success after step-level validation &amp; retries</div>
-          <div class="l lang-ko">step 단위 검증·재시도 후 생성 성공률</div></div>
-        <div class="stat"><div class="n">−40%</div>
-          <div class="l lang-en">Token use vs. a single-shot prompt</div>
-          <div class="l lang-ko">단발 프롬프트 대비 토큰 사용량</div></div>
+        <div class="stat"><div class="n">93%<span class="from"> ← 46.7%</span></div>
+          <div class="l lang-en">End-to-end generation success · 14/30 → 28/30</div>
+          <div class="l lang-ko">전체 생성 성공률 · 14/30 → 28/30</div></div>
+        <div class="stat"><div class="n">−39.9%</div>
+          <div class="l lang-en">Total tokens per completed lesson, including retries</div>
+          <div class="l lang-ko">재시도를 포함한 lesson 완성까지의 총 토큰</div></div>
       </div>
     </section>
 
@@ -469,22 +469,24 @@
     </section>
 
     <section class="impact sec">
-      <span class="eyebrow lang-en">The harness that makes a lightweight model ship-ready</span>
-      <span class="eyebrow lang-ko">경량 모델로도 믿고 배포할 품질을 만드는 하네스</span>
+      <span class="eyebrow lang-en">Generation reliability and token efficiency</span>
+      <span class="eyebrow lang-ko">생성 신뢰성과 토큰 효율</span>
       <div class="grid">
-        <div><div class="n">46.7% → 95%</div>
-          <div class="l lang-en">Generation success — the validate-and-retry harness closes the quality gap, no heavier model needed</div>
-          <div class="l lang-ko">생성 성공률 — 더 무거운 모델 없이, 검증·재시도 하네스가 품질 격차를 메웁니다</div></div>
-        <div><div class="n">2.5×</div>
-          <div class="l lang-en">First-pass rate 26.7% → 66.7% — prompt &amp; spec tuned so a lightweight model clears the bar on its own</div>
-          <div class="l lang-ko">첫 시도 통과율 26.7% → 66.7% — 경량 모델이 스스로 기준을 넘도록 프롬프트·스펙을 다듬음</div></div>
+        <div><div class="n">46.7% → 93%</div>
+          <div class="l lang-en">End-to-end generation success — 14/30 → 28/30 on the same held-out set</div>
+          <div class="l lang-ko">전체 생성 성공률 — 동일한 held-out 평가셋에서 14/30 → 28/30</div></div>
+        <div><div class="n">4 stages</div>
+          <div class="l lang-en">Checkpoint successful stages and retry the failed stage</div>
+          <div class="l lang-ko">성공한 단계는 저장하고 실패한 단계부터 재시도</div></div>
         <div><div class="n">5</div>
           <div class="l lang-en">Automated gates every rewrite must clear — schema, quality score, copyright, dedup, shallow-answer — before it can ship</div>
           <div class="l lang-ko">모든 결과물이 통과해야 하는 자동 게이트 5종 — schema·품질 점수·저작권·중복·얕은 답변 — 발행 전 검사</div></div>
         <div><div class="n">−39.9%</div>
-          <div class="l lang-en">Token use — only the failed step re-runs instead of regenerating the whole article</div>
-          <div class="l lang-ko">토큰 사용량 — 전체 기사가 아니라 실패한 step만 다시 실행</div></div>
+          <div class="l lang-en">Total tokens spent to complete a lesson, including retries, compared with single-shot generation</div>
+          <div class="l lang-ko">단발 생성 대비 lesson 완성까지의 총 토큰 감소 — 재시도 소비 포함</div></div>
       </div>
+      <p class="honest lang-en">Success rates compare single-shot generation with the four-stage pipeline on the same 30-case held-out set; 93% is rounded from 28/30. Token savings are reported separately and include retries.</p>
+      <p class="honest lang-ko">생성 성공률은 동일한 30건의 held-out 평가셋에서 단발 생성과 4단계 파이프라인을 비교한 결과이며, 93%는 28/30의 반올림값입니다. 토큰 절감은 별도 측정 결과이며 재시도 소비를 포함합니다.</p>
     </section>
 
     <section class="sec">
