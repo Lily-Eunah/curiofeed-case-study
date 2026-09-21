@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CurioFeed — Production LLM Pipeline Case Study</title>
-<meta name="description" content="How I built CurioFeed's production LLM pipeline with validation, dependency-aware retries, model failover, self-healing jobs, and human approval.">
+<meta name="description" content="How I built CurioFeed's LLM pipeline with validation, dependency-aware retries, model fallback, persisted job state, optional stalled-job recovery, and human approval.">
 <meta name="theme-color" content="#FBFCFE" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0A0F1C" media="(prefers-color-scheme: dark)">
 <link rel="canonical" href="https://lily-eunah.github.io/curiofeed-case-study/">
@@ -290,7 +290,7 @@
     </section>
 
     <figure class="diagram" id="architecture">
-      <img src="assets/architecture.webp" width="1460" height="974" decoding="async" fetchpriority="high" alt="CurioFeed architecture: 4-step LLM orchestration pipeline, validation and quality gate, retry and failover, single PostgreSQL data layer, self-healing job orchestration, and observability." />
+      <img src="assets/architecture-20260921.png" width="1535" height="1024" decoding="async" fetchpriority="high" alt="CurioFeed architecture: four-stage generation, validation-driven retries, model fallback, persisted job state, optional recovery disabled by default, per-process Gemini request pacing, and human approval." />
       <figcaption class="lang-en">System architecture — every box below is backed by code, not aspiration. (Click to zoom.)</figcaption>
       <figcaption class="lang-ko">시스템 아키텍처 — 아래 모든 박스는 구상이 아니라 실제 코드로 뒷받침됩니다. (클릭하면 확대)</figcaption>
     </figure>
@@ -338,15 +338,16 @@
       <p class="body lang-en">One article fans out into <b>three difficulty levels</b>, each running the same
         <b>four-step chain</b>: <b>Source Digest</b> pulls the key facts from the raw article and trims it
         to a workable length, then <b>Content → Vocabulary → Quiz</b> are generated in order. Every step is a
-        tracked job with its own status and timing. A heartbeat watches each step, and if one stalls — say a
-        worker dies mid-run — it's detected and re-run automatically, so an article is never left half-built.</p>
+        tracked job with its own status and timing. Per-level workers persist heartbeats alongside job state.
+        An optional reconciliation scheduler can reset stalled jobs for retry; background polling and
+        reconciliation are disabled by default.</p>
       <p class="body lang-ko">기사 하나가 <b>3개 난이도</b>로 fan-out되고, 각 난이도는 같은 <b>4단계 chain</b>을 거칩니다:
         <b>Source Digest</b>가 원문에서 핵심 내용을 뽑아 적정 길이로 다듬고, 이어서 <b>Content → Vocabulary → Quiz</b>
-        순서로 생성합니다. 모든 step은 상태와 소요 시간이 기록되는 하나의 job입니다. 하트비트가 각 step의 진행을
-        지켜보다가, 워커가 중간에 죽는 등 어떤 step이 멈추면 자동으로 감지해 다시 돌리기 때문에 기사가 반쯤 만들다
-        멈추는 일이 없습니다.</p>
+        순서로 생성합니다. 모든 step은 상태와 소요 시간이 기록되는 하나의 job입니다. 난이도별 워커는 작업 상태와
+        하트비트를 저장합니다. 선택적으로 활성화하는 reconciliation 스케줄러는 멈춘 작업을 재시도 대기 상태로
+        되돌릴 수 있으며, 주기적 작업 조회와 reconciliation은 기본 비활성화되어 있습니다.</p>
       <div class="tags"><span class="tag">4-step chain</span><span class="tag">per-level jobs</span>
-        <span class="tag done">auto-recovers stalled steps</span></div>
+        <span class="tag">optional stalled-job recovery</span></div>
       <figure>
         <div class="device"><div class="bar"><i></i><i></i><i></i>
           <span class="u">curiofeed-admin · Generation Status</span></div>
@@ -500,8 +501,8 @@
           <div class="what lang-ko">4단계 chain: primary → fallback 모델, 제목 유사도 검사, 의존성 기반 재생성.</div></a>
         <a class="code" href="https://github.com/Lily-Eunah/curio-feed/blob/main/backend/src/main/java/com/curiofeed/backend/domain/service/ReconciliationScheduler.java" target="_blank" rel="noopener">
           <div class="path">ReconciliationScheduler.java</div>
-          <div class="what lang-en">Self-healing orchestration — heartbeat detection and recovery of stalled jobs.</div>
-          <div class="what lang-ko">멈춘 job 자동 복구 — 하트비트로 감지하고 다시 실행.</div></a>
+          <div class="what lang-en">Optional stalled-job reconciliation using heartbeats; disabled by default.</div>
+          <div class="what lang-ko">하트비트 기반의 선택적 stalled-job 복구. 기본 비활성화.</div></a>
         <a class="code" href="https://github.com/Lily-Eunah/curio-feed/blob/main/backend/src/main/java/com/curiofeed/backend/infrastructure/llm/validation/TitleSimilarityValidator.java" target="_blank" rel="noopener">
           <div class="path">TitleSimilarityValidator.java</div>
           <div class="what lang-en">Copyright guardrail — bigram-Jaccard title similarity, blocks at ≥ 0.30.</div>
